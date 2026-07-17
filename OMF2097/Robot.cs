@@ -125,8 +125,8 @@ public abstract class Robot
         KeyboardKey left = isPlayer1 ? KeyboardKey.KEY_A : KeyboardKey.KEY_LEFT;
         KeyboardKey right = isPlayer1 ? KeyboardKey.KEY_D : KeyboardKey.KEY_RIGHT;
         KeyboardKey jump = isPlayer1 ? KeyboardKey.KEY_W : KeyboardKey.KEY_UP;
-        KeyboardKey punch = isPlayer1 ? KeyboardKey.KEY_SPACE : KeyboardKey.KEY_ENTER;
-        KeyboardKey kick = isPlayer1 ? KeyboardKey.KEY_F : KeyboardKey.KEY_RIGHT_SHIFT;
+        KeyboardKey punch = isPlayer1 ? KeyboardKey.KEY_F : KeyboardKey.KEY_ENTER;
+        KeyboardKey kick = isPlayer1 ? KeyboardKey.KEY_SPACE : KeyboardKey.KEY_RIGHT_CONTROL;
         KeyboardKey block = isPlayer1 ? KeyboardKey.KEY_S : KeyboardKey.KEY_DOWN;
 
         bool onGround = Position.Y >= FloorY - 1f;

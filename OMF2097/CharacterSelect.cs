@@ -79,7 +79,7 @@ public class CharacterSelect
         DrawPanel(120, 140, 420, 460, "PLAYER 1", _p1Index, _p1Ready, Color.BLUE);
         DrawPanel(_screenWidth - 540, 140, 420, 460, "PLAYER 2", _p2Index, _p2Ready, Color.RED);
 
-        string hint = "P1: A/D choose, W confirm, SPACE punch, F kick  |  P2: LEFT/RIGHT choose, UP confirm, ENTER punch, RSHIFT kick";
+        string hint = "P1: A/D choose, W confirm, F punch, SPACE kick  |  P2: LEFT/RIGHT choose, UP confirm, ENTER punch, RCTRL kick";
         int hintSize = 20;
         int hintWidth = Raylib.MeasureText(hint, hintSize);
         Raylib.DrawText(hint, (_screenWidth - hintWidth) / 2, 640, hintSize, Color.LIGHTGRAY);
@@ -125,6 +125,7 @@ public class CharacterSelect
             RobotType.Shadow => (new Color(60, 60, 80, 255), new Color(180, 40, 220, 255), new Color(30, 30, 45, 255), new Color(100, 100, 130, 255)),
             RobotType.Thorn => (new Color(40, 140, 60, 255), new Color(160, 200, 40, 255), new Color(25, 90, 35, 255), new Color(80, 190, 90, 255)),
             RobotType.Flail => (new Color(180, 160, 40, 255), new Color(120, 60, 20, 255), new Color(110, 95, 20, 255), new Color(230, 210, 80, 255)),
+            RobotType.Pyros => (new Color(255, 140, 20, 255), new Color(139, 0, 0, 255), new Color(80, 20, 10, 255), new Color(255, 220, 80, 255)),
             _ => (Color.GRAY, Color.WHITE, Color.DARKGRAY, Color.LIGHTGRAY)
         };
 
@@ -136,6 +137,18 @@ public class CharacterSelect
 
         // Rücken-Details
         DrawPreviewBackDetail(cx, cy, bob, type, accent, light);
+
+        if (type == RobotType.Pyros)
+        {
+            DrawPyrosPreview(cx, cy, body, accent, dark, light);
+            return;
+        }
+
+        if (type == RobotType.Flail)
+        {
+            DrawFlailPreview(cx, cy, body, accent, dark, light);
+            return;
+        }
 
         // Beine
         DrawPreviewLeg(cx - 18, (int)(cy + 35), 18, 45, bob, type, body, accent, dark);
@@ -169,6 +182,130 @@ public class CharacterSelect
 
         // Vorder-Details
         DrawPreviewFrontDetail(cx, cy, bob, type, accent, dark, light);
+    }
+
+    private void DrawFlailPreview(int cx, int cy, Color body, Color accent, Color dark, Color light)
+    {
+        float time = (float)Raylib.GetTime();
+        float bob = MathF.Sin(time * 3f) * 3f;
+        int headSize = 58;
+
+        // Schatten
+        Raylib.DrawEllipse(cx, (int)(cy + 58 + bob), 55, 10, new Color(0, 0, 0, 80));
+
+        // Stachelräder unten
+        int axleY = cy + 45;
+        Raylib.DrawRectangle(cx - 25, axleY - 3, 50, 6, accent);
+        DrawPreviewSpikedWheel(cx - 18, axleY, 14, time * 12f, light, accent);
+        DrawPreviewSpikedWheel(cx + 18, axleY, 14, time * 12f + MathF.PI, light, accent);
+
+        // Ketten (zwei, weiter außen)
+        DrawPreviewFlailChain(cx - 32, (int)(cy - 22 + bob), -1, time, accent, light);
+        DrawPreviewFlailChain(cx + 32, (int)(cy - 22 + bob), 1, time, accent, light);
+
+        // Stange
+        DrawRoundedRectCharSelect(cx - 7, (int)(cy - 20 + bob), 14, 70, 4, dark, accent, 2);
+
+        // Arme am Kopf
+        DrawPreviewFlailArm(cx - 22, (int)(cy - 22 + bob), body, accent, dark, light, time, true);
+        DrawPreviewFlailArm(cx + 22, (int)(cy - 22 + bob), body, accent, dark, light, time, false);
+
+        // Katzenkopf
+        Raylib.DrawCircle(cx, (int)(cy - 22 + bob), headSize / 2, body);
+        Raylib.DrawCircleLines(cx, (int)(cy - 22 + bob), headSize / 2, accent);
+
+        // Schnauze
+        Raylib.DrawEllipse(cx + 16, (int)(cy - 15 + bob), 20, 14, light);
+        Raylib.DrawCircle(cx + 25, (int)(cy - 15 + bob), 5, dark);
+
+        // Grimmiges Gesicht
+        // Augenbrauen
+        Raylib.DrawLineEx(new Vector2(cx - 16, cy - 28 + bob), new Vector2(cx - 4, cy - 22 + bob), 4f, accent);
+        Raylib.DrawLineEx(new Vector2(cx + 16, cy - 28 + bob), new Vector2(cx + 4, cy - 22 + bob), 4f, accent);
+        // Zähne
+        for (int i = -2; i <= 2; i++)
+        {
+            int tx = cx + 22 + i * 5;
+            Raylib.DrawTriangle(new Vector2(tx, cy - 12 + bob), new Vector2(tx - 2, cy - 6 + bob), new Vector2(tx + 2, cy - 6 + bob), Color.WHITE);
+            Raylib.DrawTriangle(new Vector2(tx, cy - 6 + bob), new Vector2(tx - 2, cy - 12 + bob), new Vector2(tx + 2, cy - 12 + bob), Color.WHITE);
+        }
+        // Narbe
+        Raylib.DrawLine(cx - 10, (int)(cy - 30 + bob), cx - 4, (int)(cy - 18 + bob), new Color(80, 60, 30, 255));
+
+        // Augen
+        Raylib.DrawEllipse(cx - 5, (int)(cy - 26 + bob), 6, 4, new Color(255, 60, 60, 255));
+        Raylib.DrawEllipse(cx + 5, (int)(cy - 26 + bob), 6, 4, new Color(255, 60, 60, 255));
+
+        // Schnurrhaare
+        Raylib.DrawLine(cx + 23, (int)(cy - 17 + bob), cx + 39, (int)(cy - 15 + bob), Color.WHITE);
+        Raylib.DrawLine(cx + 23, (int)(cy - 13 + bob), cx + 35, (int)(cy - 13 + bob), Color.WHITE);
+    }
+
+    private void DrawPreviewSpikedWheel(int cx, int cy, int radius, float rotation, Color light, Color accent)
+    {
+        Raylib.DrawCircle(cx, cy, radius, new Color(110, 95, 20, 255));
+        Raylib.DrawCircleLines(cx, cy, radius, accent);
+        Raylib.DrawCircle(cx, cy, (int)(radius * 0.3f), accent);
+
+        for (int i = 0; i < 8; i++)
+        {
+            float angle = rotation + i * MathF.PI * 2f / 8f;
+            int sx = (int)(cx + MathF.Cos(angle) * radius);
+            int sy = (int)(cy + MathF.Sin(angle) * radius);
+            int tx = (int)(cx + MathF.Cos(angle) * (radius + 8));
+            int ty = (int)(cy + MathF.Sin(angle) * (radius + 8));
+            Raylib.DrawTriangle(new Vector2(tx, ty), new Vector2(sx - 3, sy), new Vector2(sx + 3, sy), light);
+        }
+    }
+
+    private void DrawPreviewFlailChain(int cx, int cy, int side, float time, Color accent, Color light)
+    {
+        // Stift
+        Raylib.DrawLine(cx - side * 8, cy + 10, cx, cy, accent);
+        Raylib.DrawCircle(cx, cy, 4, accent);
+
+        float chainLength = 80f;
+        float idleSway = MathF.Sin(time * 3f + side) * 5f;
+        float chainEndX = cx + idleSway * 0.5f;
+        float chainEndY = cy + chainLength;
+
+        Vector2[] chain = new Vector2[8];
+        chain[0] = new Vector2(cx, cy);
+        for (int i = 1; i < chain.Length; i++)
+        {
+            float t = i / (float)(chain.Length - 1);
+            chain[i] = new Vector2(
+                cx + (chainEndX - cx) * t + MathF.Sin(time * 8f + i + side) * 2f,
+                cy + (chainEndY - cy) * t);
+        }
+
+        for (int i = 0; i < chain.Length - 1; i++)
+        {
+            Raylib.DrawLineEx(chain[i], chain[i + 1], 3f, Color.GRAY);
+            Raylib.DrawCircle((int)chain[i].X, (int)chain[i].Y, 3, Color.GRAY);
+        }
+        Raylib.DrawCircle((int)chainEndX, (int)chainEndY, 6, accent);
+        Raylib.DrawCircle((int)chainEndX, (int)chainEndY, 3, light);
+    }
+
+    private void DrawPreviewFlailArm(int cx, int cy, Color body, Color accent, Color dark, Color light, float time, bool isLeft)
+    {
+        float armBob = MathF.Sin(time * 15f + (isLeft ? 0f : MathF.PI)) * 4f;
+        int elbowX = (int)cx;
+        int elbowY = (int)(cy + 18 + armBob);
+
+        Raylib.DrawCircle(cx, cy, 8, accent);
+        DrawRoundedRectCharSelect(cx - 3, cy, 6, 18, 3, body, accent, 1);
+        Raylib.DrawCircle(elbowX, elbowY, 5, accent);
+        DrawRoundedRectCharSelect(elbowX - 3, elbowY, 6, 14, 3, body, accent, 1);
+
+        // Faust
+        int handX = elbowX;
+        int handY = elbowY + 14;
+        DrawRoundedRectCharSelect(handX - 12, handY - 10, 24, 20, 7, dark, accent, 3);
+        Raylib.DrawCircle(handX - 6, handY - 6, 4, accent);
+        Raylib.DrawCircle(handX, handY - 6, 4, accent);
+        Raylib.DrawCircle(handX + 6, handY - 6, 4, accent);
     }
 
     private void DrawPyrosPreview(int cx, int cy, Color body, Color accent, Color dark, Color light)

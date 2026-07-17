@@ -4,9 +4,11 @@ using System.Numerics;
 namespace OMF2097.Robots;
 
 /// <summary>
-/// FLAIL – schwerer, langsamer Roboter mit Kettenwaffe und massiver Panzerung.
+/// FLAIL – großer Katzenkopf auf einer langen Stange, unten mit zwei kleinen Stachelrädern.
 /// Zustände: Idle, Walk, Jump, Attack, Hit, Block.
-/// Besonderheiten: Kettenkugel-Waffe, hoher Schaden, langsame Attacken.
+/// Besonderheiten: Katzenkopf-Korpus, dünne Arme mit riesigen Fäusten direkt am Kopf,
+/// genau zwei Ketten, die beim Kick nach vorne in Richtung Gegner fliegen,
+/// Räder rotieren beim Laufen, boxt mit den Fäusten beim Punch.
 /// </summary>
 public class FlailRobot : Robot
 {
@@ -21,7 +23,7 @@ public class FlailRobot : Robot
     }
 
     protected override float GetAttackDuration(AttackType attackType) =>
-        attackType == AttackType.Kick ? 0.55f : 0.45f;
+        attackType == AttackType.Kick ? 0.55f : 0.35f;
 
     protected override float GetAttackDurationMultiplier(AttackType attackType) =>
         CurrentAttackVariant switch
@@ -45,214 +47,270 @@ public class FlailRobot : Robot
 
     protected override void DrawRobot(Vector2 center, float bob, float time)
     {
+        // Zeichenreihenfolge: hinten nach vorne
+        DrawSpikedWheels(center, bob, time);
+        DrawChains(center, bob, time);
         DrawBody(center, bob);
-        DrawHead(center, bob);
-        DrawLimbs(center, bob, time);
-        DrawWeapon(center, bob);
-        DrawDetailsFront(center, bob);
+        DrawArms(center, bob, time);
+        DrawHead(center, bob, time);
     }
+
+    // ========================
+    // KÖRPER: Lange Stange, Achse mit Rädern ganz unten
+    // ========================
 
     private void DrawBody(Vector2 center, float bob)
     {
-        float torsoW = Width * 0.85f;
         float torsoY = center.Y + bob;
+        float poleW = 14f;
+        float poleH = Height * 0.55f;
 
-        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY + Height * 0.18f, torsoW * 0.7f, Height * 0.16f, 8f, Dark, Accent, 2f);
-        DrawRoundedRect(center.X - torsoW * 0.4f, torsoY + Height * 0.02f, torsoW * 0.8f, Height * 0.22f, 10f, Color, Accent, 2f);
-        DrawRoundedRect(center.X - torsoW * 0.45f, torsoY - Height * 0.32f, torsoW * 0.9f, Height * 0.38f, 14f, Color, Accent, 3f);
-        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY - Height * 0.28f, torsoW * 0.7f, Height * 0.18f, 10f, Light, Color.WHITE, 1f);
+        // Kürzere vertikale Stange, Kopf sitzt höher
+        DrawRoundedRect(center.X - poleW / 2f, torsoY - Height * 0.25f, poleW, poleH, 4f, Dark, Accent, 2f);
 
-        float coreY = torsoY - Height * 0.12f;
-        Raylib.DrawCircle((int)center.X, (int)coreY, 16f, Accent);
-        Raylib.DrawCircle((int)center.X, (int)coreY, 12f, Dark);
-        Raylib.DrawCircle((int)center.X, (int)coreY, 8f, Color.WHITE);
-        Raylib.DrawCircle((int)center.X, (int)coreY, 5f, new Color(255, 255, 200, 220));
-        Raylib.DrawCircle((int)(center.X - 2f), (int)(coreY - 2f), 2f, Color.WHITE);
-
-        float shoulderY = torsoY - Height * 0.28f;
-        DrawCircle3D(center.X - torsoW * 0.48f, shoulderY, 14f, Accent, Dark);
-        DrawCircle3D(center.X + torsoW * 0.48f, shoulderY, 14f, Accent, Dark);
-
-        DrawChestDetail(center, torsoY);
+        // Querachse mit Stachelrädern ganz unten (bleibt an derselben Position)
+        float axleY = torsoY + Height * 0.40f;
+        Raylib.DrawRectangle((int)(center.X - Width * 0.35f), (int)(axleY - 3f), (int)(Width * 0.7f), 6, Accent);
     }
 
-    private void DrawChestDetail(Vector2 center, float torsoY)
+    private void DrawHead(Vector2 center, float bob, float time)
     {
-        float coreY = torsoY - Height * 0.12f;
-        DrawRoundedRect(center.X - 16f, coreY - 14f, 32f, 28f, 4f, new Color(80, 60, 30, 255), new Color(220, 180, 60, 255), 2f);
-        for (int i = -1; i <= 1; i += 2)
-            for (int j = -1; j <= 1; j += 2)
-            {
-                float bx = center.X + i * 10f;
-                float by = coreY + j * 8f;
-                Raylib.DrawCircle((int)bx, (int)by, 3f, new Color(220, 180, 60, 255));
-            }
-    }
-
-    private void DrawHead(Vector2 center, float bob)
-    {
-        float headSize = 40f;
-        Vector2 headPos = new Vector2(center.X, center.Y - Height * 0.38f + bob);
+        float headSize = 58f;
+        // Kopf deutlich höher, Schwungrad auf Höhe der Radachse
+        Vector2 headPos = new Vector2(center.X, center.Y - Height * 0.28f + bob);
         float dir = FacingRight ? 1f : -1f;
 
-        DrawRoundedRect(headPos.X - 11f, headPos.Y + 8f, 22f, 18f, 6f, Dark, Accent, 2f);
+        // Katzenkopf-Korpus
+        Raylib.DrawCircle((int)headPos.X, (int)headPos.Y, headSize / 2f, Color);
+        Raylib.DrawCircleLines((int)headPos.X, (int)headPos.Y, headSize / 2f, Accent);
 
-        DrawRoundedRect(headPos.X - headSize / 2f, headPos.Y - headSize / 2f, headSize, headSize, 6f, Accent, new Color(220, 180, 60, 255), 3f);
-        DrawRoundedRect(headPos.X - headSize / 2f + 6f, headPos.Y - headSize / 2f + 6f, headSize - 12f, headSize - 12f, 4f, Color, Accent, 2f);
-        DrawRoundedRect(headPos.X - headSize / 2f + 4f, headPos.Y - headSize / 2f + 4f, headSize - 8f, 16f, 3f, Dark, new Color(220, 180, 60, 255), 1f);
-        Raylib.DrawRectangle((int)(headPos.X + dir * (headSize / 2f - 2f)), (int)(headPos.Y - 8f), 10, 16, Dark);
-        Raylib.DrawCircle((int)(headPos.X + dir * (headSize / 2f + 4f)), (int)headPos.Y, 5f, new Color(255, 50, 50, 255));
-        DrawRoundedRect(headPos.X - 12f, headPos.Y + 8f, 24f, 12f, 4f, Accent, new Color(220, 180, 60, 255), 1f);
+        // Schnauze
+        Raylib.DrawEllipse((int)(headPos.X + dir * 16f), (int)(headPos.Y + 7f), 20f, 14f, Light);
+        Raylib.DrawCircle((int)(headPos.X + dir * 25f), (int)(headPos.Y + 7f), 5f, Dark);
 
+        // Grimmiges Gesicht
+        DrawGrimFace(headPos, dir);
+
+        // Visor (Katzenaugen)
         DrawVisor(headPos);
+
+        // Schnurrhaare
+        for (int i = -1; i <= 1; i += 2)
+        {
+            float hx = headPos.X + dir * 23f;
+            float hy = headPos.Y + i * 5f;
+            Raylib.DrawLine((int)hx, (int)hy, (int)(hx + dir * 16f), (int)(hy + i * 2f), Color.WHITE);
+            Raylib.DrawLine((int)hx, (int)(hy + 3f), (int)(hx + dir * 12f), (int)(hy + 3f), Color.WHITE);
+        }
+    }
+
+    private void DrawGrimFace(Vector2 headPos, float dir)
+    {
+        // Runzelnde Stirn
+        Raylib.DrawLine(
+            (int)(headPos.X - dir * 18f), (int)(headPos.Y - 14f),
+            (int)(headPos.X - dir * 6f), (int)(headPos.Y - 8f),
+            Accent);
+        Raylib.DrawLine(
+            (int)(headPos.X + dir * 18f), (int)(headPos.Y - 14f),
+            (int)(headPos.X + dir * 6f), (int)(headPos.Y - 8f),
+            Accent);
+
+        // Grimmige Augenbrauen
+        Raylib.DrawLineEx(
+            new Vector2(headPos.X - dir * 16f, headPos.Y - 12f),
+            new Vector2(headPos.X - dir * 4f, headPos.Y - 6f),
+            4f, Accent);
+        Raylib.DrawLineEx(
+            new Vector2(headPos.X + dir * 16f, headPos.Y - 12f),
+            new Vector2(headPos.X + dir * 4f, headPos.Y - 6f),
+            4f, Accent);
+
+        // Geblecktes Maul
+        for (int i = -2; i <= 2; i++)
+        {
+            float tx = headPos.X + dir * 22f + i * 5f;
+            float tyTop = headPos.Y + 10f;
+            float tyBottom = headPos.Y + 16f;
+            Raylib.DrawTriangle(
+                new Vector2(tx, tyTop),
+                new Vector2(tx - 2f, tyTop + 6f),
+                new Vector2(tx + 2f, tyTop + 6f),
+                Color.WHITE);
+            Raylib.DrawTriangle(
+                new Vector2(tx, tyBottom),
+                new Vector2(tx - 2f, tyBottom - 6f),
+                new Vector2(tx + 2f, tyBottom - 6f),
+                Color.WHITE);
+        }
+
+        // Narbe über einem Auge
+        Raylib.DrawLine(
+            (int)(headPos.X - dir * 10f), (int)(headPos.Y - 16f),
+            (int)(headPos.X - dir * 4f), (int)(headPos.Y - 4f),
+            new Color(80, 60, 30, 255));
     }
 
     private void DrawVisor(Vector2 headPos)
     {
-        float visorW = 20f;
-        float visorH = 10f;
-        float visorX = FacingRight ? headPos.X + 2f : headPos.X - visorW - 2f;
-        Raylib.DrawRectangle((int)(visorX - 2f), (int)(headPos.Y - 6f), (int)(visorW + 4f), (int)(visorH + 4f), Dark);
-        Raylib.DrawRectangle((int)visorX, (int)(headPos.Y - 4f), (int)visorW, (int)visorH, Color.SKYBLUE);
-        Raylib.DrawRectangle((int)(visorX + 2f), (int)(headPos.Y - 2f), (int)(visorW - 4f), (int)(visorH - 4f), new Color(100, 200, 255, 120));
-        Raylib.DrawRectangle((int)(visorX + 4f), (int)(headPos.Y - 3f), (int)(visorW * 0.3f), 2, Color.WHITE);
-    }
-
-    private void DrawLimbs(Vector2 center, float bob, float time)
-    {
-        float armW = 20f;
-        float armH = 52f;
-        float legW = 18f;
-        float legH = 52f;
-
-        float armExtension = CurrentAttackType == AttackType.Punch ? 45f : (CurrentAttackType == AttackType.Kick ? 22f : 28f);
-        float armOffset = State == RobotState.Attack ? (FacingRight ? armExtension : -armExtension) : (FacingRight ? 20f : -20f);
-        float armAngle = State == RobotState.Attack ? (FacingRight ? -0.9f : 0.9f) : 0f;
-
-        Vector2 shoulderY = new Vector2(center.X, center.Y - Height * 0.26f + bob);
-        DrawArm(new Vector2(shoulderY.X - armOffset, shoulderY.Y), armW, armH, armAngle, true, time);
-        DrawArm(new Vector2(shoulderY.X + armOffset, shoulderY.Y), armW, armH, -armAngle, false, time);
-
-        Vector2 hipY = new Vector2(center.X, center.Y + Height * 0.18f + bob);
-        float legBob = State == RobotState.Walk ? MathF.Sin(time * 15f + MathF.PI) * 8f : 0f;
-        float kickExtension = CurrentAttackType == AttackType.Kick && State == RobotState.Attack ? 28f : 0f;
-        float kickDir = FacingRight ? 1f : -1f;
-
-        DrawLeg(new Vector2(hipY.X - 20f, hipY.Y), legW, legH, legBob, false, time);
-        DrawLeg(new Vector2(hipY.X + 20f + kickDir * kickExtension, hipY.Y - legBob), legW, legH + kickExtension * 0.3f, -legBob, kickExtension > 0, time);
-    }
-
-    private void DrawArm(Vector2 shoulder, float w, float h, float angle, bool isLeft, float time)
-    {
-        DrawCircle3D(shoulder.X, shoulder.Y, 12f, Accent, Dark);
-        Vector2 elbow = new Vector2(shoulder.X, shoulder.Y + h * 0.45f);
-        DrawRoundedLimb(shoulder, elbow, w, angle, Color, Accent);
-        DrawCircle3D(elbow.X, elbow.Y, 10f, Accent, Dark);
-        Vector2 hand = new Vector2(elbow.X + MathF.Sin(angle) * h * 0.4f, elbow.Y + MathF.Cos(angle) * h * 0.4f);
-        DrawRoundedLimb(elbow, hand, w * 0.85f, angle, Color, Accent);
-        DrawHand(hand);
-    }
-
-    private void DrawHand(Vector2 pos)
-    {
-        float handW = 18f;
-        float handH = 16f;
-        DrawRoundedRect(pos.X - handW / 2f, pos.Y - handH / 2f, handW, handH, 5f, Dark, Accent, 2f);
-        for (int i = -1; i <= 1; i++)
-        {
-            float fx = pos.X + i * 5f;
-            float fy = pos.Y + handH / 2f;
-            Raylib.DrawRectangle((int)(fx - 2f), (int)fy, 4, 8, Accent);
-            Raylib.DrawTriangle(
-                new Vector2(fx, fy + 10f),
-                new Vector2(fx - 3f, fy + 6f),
-                new Vector2(fx + 3f, fy + 6f),
-                Light);
-        }
-        Raylib.DrawCircle((int)pos.X, (int)(pos.Y - 2f), 4f, Light);
-    }
-
-    private void DrawLeg(Vector2 hip, float w, float h, float bob, bool isKicking, float time)
-    {
-        DrawCircle3D(hip.X, hip.Y, 12f, Accent, Dark);
-        Vector2 knee = new Vector2(hip.X + bob * 0.3f, hip.Y + h * 0.5f);
-        DrawRoundedLimb(hip, knee, w, bob * 0.01f, Color, Accent);
-        DrawCircle3D(knee.X, knee.Y, 11f, Accent, Dark);
-        Vector2 foot = new Vector2(knee.X - bob * 0.2f, knee.Y + h * 0.5f);
-        if (isKicking)
-            foot = new Vector2(knee.X + (FacingRight ? 35f : -35f), knee.Y + 10f);
-        DrawRoundedLimb(knee, foot, w * 0.85f, isKicking ? (FacingRight ? -0.4f : 0.4f) : 0f, Color, Accent);
-        DrawFoot(foot, isKicking);
-    }
-
-    private void DrawFoot(Vector2 pos, bool isKicking)
-    {
-        float footW = 34f;
-        float footH = 14f;
-        if (isKicking)
-        {
-            DrawRoundedRect(pos.X - footW / 2f, pos.Y - footH / 2f, footW, footH, 6f, Accent, Light, 2f);
-            for (int i = 0; i < 3; i++)
-            {
-                float sx = pos.X - footW / 2f + 6f + i * 10f;
-                Raylib.DrawRectangle((int)sx, (int)(pos.Y + footH / 2f), 6, 6, Dark);
-            }
-        }
-        else
-        {
-            DrawRoundedRect(pos.X - footW / 2f, pos.Y - footH / 2f, footW, footH, 5f, Dark, Accent, 2f);
-            Raylib.DrawRectangle((int)(pos.X - footW / 2f + 3f), (int)(pos.Y + 2f), (int)(footW - 6f), 5, Accent);
-            for (int i = -1; i <= 1; i++)
-                Raylib.DrawCircle((int)(pos.X + i * 8f), (int)(pos.Y - 2f), 3f, Light);
-        }
-    }
-
-    private void DrawWeapon(Vector2 center, float bob)
-    {
-        if (CurrentAttackType == AttackType.Kick) return;
-
+        float eyeW = 12f;
+        float eyeH = 7f;
         float dir = FacingRight ? 1f : -1f;
-        float handY = center.Y - Height * 0.05f + bob;
-        float handX = FacingRight ? center.X + Width / 2f - 5f : center.X - Width / 2f + 5f;
 
-        DrawRoundedRect(handX - 6f, handY - 6f, 12f, 24f, 3f, Dark, Accent, 1f);
-
-        float weaponX = FacingRight ? handX : handX - 60f;
-        float weaponY = handY - 7f;
-        DrawRoundedRect(weaponX, weaponY, 60f, 14f, 4f, Color.GOLD, Color.WHITE, 2f);
-        Raylib.DrawRectangle((int)(weaponX + 21f), (int)(weaponY + 2f), 18, 10, Light);
-
-        float chainStartX = FacingRight ? weaponX + 60f : weaponX;
-        float ballX = FacingRight ? chainStartX + 22f : chainStartX - 22f;
-        for (int i = 0; i < 4; i++)
-        {
-            float cx = FacingRight ? chainStartX + i * 5f : chainStartX - i * 5f;
-            Raylib.DrawCircle((int)cx, (int)(weaponY + 7f), 3f, Color.GRAY);
-        }
-        Raylib.DrawCircle((int)ballX, (int)(weaponY + 7f), 12f, Color.GOLD);
-        Raylib.DrawCircle((int)ballX, (int)(weaponY + 7f), 12f, Color.WHITE);
-        Raylib.DrawCircle((int)ballX, (int)(weaponY + 7f), 8f, Light);
-        for (int i = 0; i < 4; i++)
-        {
-            float angle = i * MathF.PI / 2f;
-            float sx = ballX + MathF.Cos(angle) * 14f;
-            float sy = weaponY + 7f + MathF.Sin(angle) * 14f;
-            Raylib.DrawCircle((int)sx, (int)sy, 3f, Accent);
-        }
-    }
-
-    private void DrawDetailsFront(Vector2 center, float bob)
-    {
         for (int i = -1; i <= 1; i += 2)
         {
-            float sx = center.X + i * Width * 0.5f;
-            float sy = center.Y - Height * 0.26f + bob;
-            DrawRoundedRect(sx - 12f, sy - 10f, 24f, 36f, 6f, Accent, new Color(220, 180, 60, 255), 2f);
-            Raylib.DrawCircle((int)(sx - 6f), (int)(sy + 4f), 3f, new Color(220, 180, 60, 255));
-            Raylib.DrawCircle((int)(sx + 6f), (int)(sy + 4f), 3f, new Color(220, 180, 60, 255));
+            float eyeX = headPos.X + dir * 10f + i * 5f;
+            float eyeY = headPos.Y - 4f;
+            Raylib.DrawEllipse((int)eyeX, (int)eyeY, eyeW, eyeH, new Color(255, 60, 60, 255));
+            Raylib.DrawEllipseLines((int)eyeX, (int)eyeY, eyeW, eyeH, Accent);
+            Raylib.DrawCircle((int)(eyeX + dir * 2f), (int)(eyeY - 1f), 2f, Color.WHITE);
         }
-        DrawRoundedRect(center.X - Width * 0.38f, center.Y + Height * 0.05f + bob, Width * 0.76f, 16f, 5f, Dark, new Color(220, 180, 60, 255), 2f);
-        Raylib.DrawCircle((int)center.X, (int)(center.Y + Height * 0.13f + bob), 10f, new Color(220, 180, 60, 255));
-        Raylib.DrawCircle((int)center.X, (int)(center.Y + Height * 0.13f + bob), 6f, Dark);
+    }
+
+    // ========================
+    // ARME: direkt am Kopf, boxen beim Punch
+    // ========================
+
+    private void DrawArms(Vector2 center, float bob, float time)
+    {
+        float headY = center.Y - Height * 0.28f + bob;
+        float armOffset = Width * 0.30f;
+
+        Vector2 leftShoulder = new Vector2(center.X - armOffset, headY);
+        Vector2 rightShoulder = new Vector2(center.X + armOffset, headY);
+
+        // Beim Punch schwingen die Fäuste nach vorne
+        float punchExtension = CurrentAttackType == AttackType.Punch && State == RobotState.Attack ? 35f : 0f;
+        float punchDir = FacingRight ? 1f : -1f;
+
+        DrawArm(leftShoulder, true, time, punchDir * punchExtension);
+        DrawArm(rightShoulder, false, time, punchDir * punchExtension);
+    }
+
+    private void DrawArm(Vector2 shoulder, bool isLeft, float time, float punchOffset)
+    {
+        DrawCircle3D(shoulder.X, shoulder.Y, 8f, Accent, Dark);
+
+        float armBob = State == RobotState.Walk ? MathF.Sin(time * 15f + (isLeft ? 0f : MathF.PI)) * 4f : 0f;
+        Vector2 elbow = new Vector2(shoulder.X, shoulder.Y + 18f + armBob);
+        DrawRoundedLimb(shoulder, elbow, 6f, 0f, Color, Accent);
+
+        DrawCircle3D(elbow.X, elbow.Y, 5f, Accent, Dark);
+        Vector2 hand = new Vector2(elbow.X + punchOffset, elbow.Y + 14f);
+        DrawRoundedLimb(elbow, hand, 6f, 0f, Color, Accent);
+
+        DrawFist(hand);
+    }
+
+    private void DrawFist(Vector2 hand)
+    {
+        float fistW = 24f;
+        float fistH = 20f;
+        DrawRoundedRect(hand.X - fistW / 2f, hand.Y - fistH / 2f, fistW, fistH, 7f, Dark, Accent, 3f);
+        for (int i = -1; i <= 1; i++)
+        {
+            float fx = hand.X + i * 6f;
+            float fy = hand.Y - fistH / 2f + 4f;
+            Raylib.DrawCircle((int)fx, (int)fy, 4f, Accent);
+        }
+        Raylib.DrawCircle((int)(hand.X - fistW / 2f + 4f), (int)(hand.Y + 2f), 5f, Accent);
+    }
+
+    // ========================
+    // GENAU ZWEI KETTEN: fliegen beim Kick nach vorne
+    // ========================
+
+    private void DrawChains(Vector2 center, float bob, float time)
+    {
+        float headY = center.Y - Height * 0.28f + bob;
+        float dir = FacingRight ? 1f : -1f;
+
+        // Genau zwei Ketten, weiter außen am Kopf
+        DrawChain(new Vector2(center.X - 32f, headY - 22f), -1, dir, time);
+        DrawChain(new Vector2(center.X + 32f, headY - 22f), 1, dir, time);
+    }
+
+    private void DrawChain(Vector2 anchor, int side, float dir, float time)
+    {
+        float postDir = side * dir;
+
+        // Längerer Stift, der aus dem Kopf ragt
+        Raylib.DrawLine((int)(anchor.X - side * 8f), (int)(anchor.Y + 10f), (int)anchor.X, (int)anchor.Y, Accent);
+        Raylib.DrawCircle((int)anchor.X, (int)anchor.Y, 4f, Accent);
+
+        // Längere Kette hängt nach unten, leichtes Schwingen im Idle
+        float chainLength = 80f;
+        float idleSway = MathF.Sin(time * 3f + side) * 5f;
+        float swingAngle = idleSway * 0.03f;
+
+        float chainEndX = anchor.X + MathF.Sin(swingAngle) * chainLength;
+        float chainEndY = anchor.Y + MathF.Cos(swingAngle) * chainLength;
+
+        // Beim Kick: beide Ketten in dieselbe Richtung auf den Gegner schwingen
+        if (CurrentAttackType == AttackType.Kick && State == RobotState.Attack)
+        {
+            float progress = 1f - (StateTimer / GetAttackDuration(CurrentAttackType));
+            progress = Math.Clamp(progress, 0f, 1f);
+            float attackDir = FacingRight ? 1f : -1f;
+            float sweep = MathF.Sin(progress * MathF.PI) * 95f * attackDir;
+            float lift = MathF.Sin(progress * MathF.PI) * -15f;
+            chainEndX = anchor.X + sweep;
+            chainEndY = anchor.Y - 5f + lift;
+        }
+
+        Vector2[] chain = new Vector2[8];
+        chain[0] = anchor;
+        for (int i = 1; i < chain.Length; i++)
+        {
+            float t = i / (float)(chain.Length - 1);
+            chain[i] = new Vector2(
+                anchor.X + (chainEndX - anchor.X) * t + MathF.Sin(time * 8f + i + side) * 2f,
+                anchor.Y + (chainEndY - anchor.Y) * t);
+        }
+
+        for (int i = 0; i < chain.Length - 1; i++)
+        {
+            Raylib.DrawLineEx(chain[i], chain[i + 1], 3f, Color.GRAY);
+            Raylib.DrawCircle((int)chain[i].X, (int)chain[i].Y, 3f, Color.GRAY);
+        }
+        Raylib.DrawCircle((int)chainEndX, (int)chainEndY, 6f, Accent);
+        Raylib.DrawCircle((int)chainEndX, (int)chainEndY, 3f, Light);
+    }
+
+    // ========================
+    // STACHELRÄDER: unten, rotieren nur beim Laufen
+    // ========================
+
+    private void DrawSpikedWheels(Vector2 center, float bob, float time)
+    {
+        float axleY = center.Y + Height * 0.40f + bob;
+        float wheelRadius = 14f;
+
+        float rotationSpeed = State == RobotState.Walk ? time * 12f : 0f;
+
+        DrawSpikedWheel(center.X - Width * 0.25f, axleY, wheelRadius, rotationSpeed);
+        DrawSpikedWheel(center.X + Width * 0.25f, axleY, wheelRadius, rotationSpeed + MathF.PI);
+    }
+
+    private void DrawSpikedWheel(float cx, float cy, float radius, float rotation)
+    {
+        Raylib.DrawCircle((int)cx, (int)cy, radius, Dark);
+        Raylib.DrawCircleLines((int)cx, (int)cy, radius, Accent);
+        Raylib.DrawCircle((int)cx, (int)cy, radius * 0.3f, Accent);
+
+        int spikeCount = 8;
+        for (int i = 0; i < spikeCount; i++)
+        {
+            float angle = rotation + i * MathF.PI * 2f / spikeCount;
+            float sx = cx + MathF.Cos(angle) * radius;
+            float sy = cy + MathF.Sin(angle) * radius;
+            float tx = cx + MathF.Cos(angle) * (radius + 8f);
+            float ty = cy + MathF.Sin(angle) * (radius + 8f);
+            Raylib.DrawTriangle(
+                new Vector2(tx, ty),
+                new Vector2(sx - 3f, sy),
+                new Vector2(sx + 3f, sy),
+                Light);
+        }
     }
 }
