@@ -17,8 +17,8 @@ public class Game
     private readonly int _screenWidth;
     private readonly int _screenHeight;
     private readonly Arena _arena;
-    private readonly Robot _player1;
-    private readonly Robot _player2;
+    private Robot _player1;
+    private Robot _player2;
     private readonly Camera2D _camera;
     private readonly Menu _menu;
     private readonly CharacterSelect _characterSelect;
@@ -40,6 +40,7 @@ public class Game
 
         _player1 = new Robot(RobotType.Jaguar, true, new Vector2(300, _arena.FloorY));
         _player2 = new Robot(RobotType.Shadow, false, new Vector2(screenWidth - 300, _arena.FloorY));
+        _characterSelect = new CharacterSelect(screenWidth, screenHeight);
 
         _camera = new Camera2D
         {
@@ -50,7 +51,6 @@ public class Game
         };
 
         _menu = new Menu(screenWidth, screenHeight);
-        _characterSelect = new CharacterSelect(screenWidth, screenHeight);
     }
 
     public void Update(float dt)
@@ -122,6 +122,9 @@ public class Game
 
         ResolveCollision(_player1, _player2);
 
+        AutoTurnAfterJumpOver(_player1, _player2);
+        AutoTurnAfterJumpOver(_player2, _player1);
+
         if (_player1.IsAttacking && _player1.HitboxActive && _player1.AttackHitbox.Intersects(_player2.Hurtbox))
         {
             _player2.TakeDamage(_player1.AttackDamage, _player1.FacingRight ? 1 : -1, _player1.FacingRight);
@@ -167,6 +170,20 @@ public class Game
         b.FacingRight = b.Position.X < a.Position.X;
     }
 
+    private void AutoTurnAfterJumpOver(Robot jumper, Robot other)
+    {
+        if (jumper.State != RobotState.Jump)
+            return;
+
+        bool wasLeftOfOther = jumper.Position.X < other.Position.X;
+        bool nowRightOfOther = jumper.Position.X > other.Position.X;
+
+        if ((wasLeftOfOther && nowRightOfOther) || (!wasLeftOfOther && !nowRightOfOther))
+        {
+            jumper.FacingRight = jumper.Position.X < other.Position.X;
+        }
+    }
+
     private void EndRound()
     {
         if (_player1.Health <= 0)
@@ -189,7 +206,8 @@ public class Game
         _p1Wins = 0;
         _p2Wins = 0;
         _round = 1;
-        ResetRound();
+        _player1 = new Robot(p1Type, true, new Vector2(300, _arena.FloorY));
+        _player2 = new Robot(p2Type, false, new Vector2(_screenWidth - 300, _arena.FloorY));
     }
 
     private void ResetRound()
@@ -261,8 +279,16 @@ public class Game
         Raylib.DrawRectangle(_screenWidth - 40 - barWidth, y, p2HealthWidth, barHeight, Color.RED);
         Raylib.DrawRectangleLines(_screenWidth - 40 - barWidth, y, barWidth, barHeight, Color.WHITE);
 
-        Raylib.DrawText($"P1", 40, y + 30, 20, Color.WHITE);
-        Raylib.DrawText($"P2", _screenWidth - 70, y + 30, 20, Color.WHITE);
+        string p1Name = RobotName(_player1.Type);
+        string p2Name = RobotName(_player2.Type);
+        int p1NameWidth = Raylib.MeasureText(p1Name, 20);
+        int p2NameWidth = Raylib.MeasureText(p2Name, 20);
+
+        Raylib.DrawText(p1Name, 40 + (barWidth - p1NameWidth) / 2, y + 30, 20, Color.WHITE);
+        Raylib.DrawText(p2Name, _screenWidth - 40 - barWidth + (barWidth - p2NameWidth) / 2, y + 30, 20, Color.WHITE);
+
+        Raylib.DrawText("P1", 40, y + 54, 18, Color.GRAY);
+        Raylib.DrawText("P2", _screenWidth - 70, y + 54, 18, Color.GRAY);
 
         string roundText = $"ROUND {_round}";
         int roundWidth = Raylib.MeasureText(roundText, 24);
@@ -285,4 +311,14 @@ public class Game
         int continueWidth = Raylib.MeasureText(continueText, 24);
         Raylib.DrawText(continueText, (_screenWidth - continueWidth) / 2, _screenHeight / 2 + 40, 24, Color.WHITE);
     }
+
+    private static string RobotName(RobotType type) => type switch
+    {
+        RobotType.Jaguar => "JAGUAR",
+        RobotType.Shadow => "SHADOW",
+        RobotType.Thorn => "THORN",
+        RobotType.Flail => "FLAIL",
+        RobotType.Pyros => "PYROS",
+        _ => "UNKNOWN"
+    };
 }
