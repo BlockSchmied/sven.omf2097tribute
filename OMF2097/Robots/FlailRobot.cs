@@ -47,12 +47,18 @@ public class FlailRobot : Robot
 
     protected override void DrawRobot(Vector2 center, float bob, float time)
     {
-        // Zeichenreihenfolge: hinten nach vorne
-        DrawSpikedWheels(center, bob, time);
+        // Flail nach unten verschieben, bis er auf Jaguar-Höhe steht
+        float verticalShift = Height * 0.20f;
+        Vector2 shiftedCenter = new Vector2(center.X, center.Y + verticalShift);
+
+        // Ketten bleiben auf ihrer ursprünglichen Höhe
         DrawChains(center, bob, time);
-        DrawBody(center, bob);
-        DrawArms(center, bob, time);
-        DrawHead(center, bob, time);
+
+        // Rest des Körpers wird nach unten verschoben
+        DrawSpikedWheels(shiftedCenter, bob, time);
+        DrawBody(shiftedCenter, bob);
+        DrawArms(shiftedCenter, bob, time);
+        DrawHead(shiftedCenter, bob, time);
     }
 
     // ========================
@@ -222,29 +228,38 @@ public class FlailRobot : Robot
 
     private void DrawChains(Vector2 center, float bob, float time)
     {
-        float headY = center.Y - Height * 0.28f + bob;
+        float headY = center.Y - Height * 0.16f + bob;
         float dir = FacingRight ? 1f : -1f;
 
-        // Genau zwei Ketten, weiter außen am Kopf
-        DrawChain(new Vector2(center.X - 32f, headY - 22f), -1, dir, time);
-        DrawChain(new Vector2(center.X + 32f, headY - 22f), 1, dir, time);
+        // Genau zwei Ketten, als Ohren aus dem Kopf ragend, Seiten vertauscht
+        DrawChain(new Vector2(center.X - 26f, headY - 18f), 1, dir, time);
+        DrawChain(new Vector2(center.X + 26f, headY - 18f), -1, dir, time);
     }
 
     private void DrawChain(Vector2 anchor, int side, float dir, float time)
     {
         float postDir = side * dir;
 
-        // Längerer Stift, der aus dem Kopf ragt
-        Raylib.DrawLine((int)(anchor.X - side * 8f), (int)(anchor.Y + 10f), (int)anchor.X, (int)anchor.Y, Accent);
-        Raylib.DrawCircle((int)anchor.X, (int)anchor.Y, 4f, Accent);
+        // Stange ragt aus dem Kopf heraus; das innere Ende ist fest am Kopf
+        float postEndX = anchor.X + postDir * 18f;
+        float postEndY = anchor.Y - 8f;
 
-        // Längere Kette hängt nach unten, leichtes Schwingen im Idle
+        // Festes Gelenk am Kopf (inneres Ende der Stange)
+        DrawCircle3D(anchor.X, anchor.Y, 6f, Accent, Dark);
+
+        // Dünne Stange vom Kopf zur Außenseite
+        DrawRoundedLimb(anchor, new Vector2(postEndX, postEndY), 4f, 0f, Accent, Color.WHITE);
+
+        // Außeres Gelenk, an dem die Kette hängt
+        DrawCircle3D(postEndX, postEndY, 4f, Accent, Dark);
+
+        // Kette hängt von der Stangenspitze herab
         float chainLength = 80f;
         float idleSway = MathF.Sin(time * 3f + side) * 5f;
         float swingAngle = idleSway * 0.03f;
 
-        float chainEndX = anchor.X + MathF.Sin(swingAngle) * chainLength;
-        float chainEndY = anchor.Y + MathF.Cos(swingAngle) * chainLength;
+        float chainEndX = postEndX + MathF.Sin(swingAngle) * chainLength;
+        float chainEndY = postEndY + MathF.Cos(swingAngle) * chainLength;
 
         // Beim Kick: beide Ketten in dieselbe Richtung auf den Gegner schwingen
         if (CurrentAttackType == AttackType.Kick && State == RobotState.Attack)
@@ -254,18 +269,18 @@ public class FlailRobot : Robot
             float attackDir = FacingRight ? 1f : -1f;
             float sweep = MathF.Sin(progress * MathF.PI) * 95f * attackDir;
             float lift = MathF.Sin(progress * MathF.PI) * -15f;
-            chainEndX = anchor.X + sweep;
-            chainEndY = anchor.Y - 5f + lift;
+            chainEndX = postEndX + sweep;
+            chainEndY = postEndY - 5f + lift;
         }
 
         Vector2[] chain = new Vector2[8];
-        chain[0] = anchor;
+        chain[0] = new Vector2(postEndX, postEndY);
         for (int i = 1; i < chain.Length; i++)
         {
             float t = i / (float)(chain.Length - 1);
             chain[i] = new Vector2(
-                anchor.X + (chainEndX - anchor.X) * t + MathF.Sin(time * 8f + i + side) * 2f,
-                anchor.Y + (chainEndY - anchor.Y) * t);
+                postEndX + (chainEndX - postEndX) * t + MathF.Sin(time * 8f + i + side) * 2f,
+                postEndY + (chainEndY - postEndY) * t);
         }
 
         for (int i = 0; i < chain.Length - 1; i++)

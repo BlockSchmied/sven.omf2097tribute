@@ -155,8 +155,8 @@ public class CharacterSelect
         DrawPreviewLeg(cx + 18, (int)(cy + 35), 18, 45, -bob, type, body, accent, dark);
 
         // Körper
-        DrawRoundedRect(cx - 36, (int)(cy - 25 + bob), 72, 70, 10, body, accent, 3);
-        DrawRoundedRect(cx - 28, (int)(cy - 18 + bob), 56, 20, 6, light, Color.WHITE, 1);
+        DrawRoundedRectCharSelect(cx - 36, (int)(cy - 25 + bob), 72, 70, 10, body, accent, 3);
+        DrawRoundedRectCharSelect(cx - 28, (int)(cy - 18 + bob), 56, 20, 6, light, Color.WHITE, 1);
 
         // Reaktor-Kern
         Raylib.DrawCircle(cx, (int)(cy + 5 + bob), 10, accent);
@@ -189,56 +189,58 @@ public class CharacterSelect
         float time = (float)Raylib.GetTime();
         float bob = MathF.Sin(time * 3f) * 3f;
         int headSize = 58;
+        int verticalShift = 22; // Kopf nach unten, wie im Spiel
+        int headY = (int)(cy - 22 + bob + verticalShift);
 
         // Schatten
-        Raylib.DrawEllipse(cx, (int)(cy + 58 + bob), 55, 10, new Color(0, 0, 0, 80));
+        Raylib.DrawEllipse(cx, (int)(cy + 58 + bob + verticalShift), 55, 10, new Color(0, 0, 0, 80));
 
         // Stachelräder unten
-        int axleY = cy + 45;
+        int axleY = cy + 45 + verticalShift;
         Raylib.DrawRectangle(cx - 25, axleY - 3, 50, 6, accent);
         DrawPreviewSpikedWheel(cx - 18, axleY, 14, time * 12f, light, accent);
         DrawPreviewSpikedWheel(cx + 18, axleY, 14, time * 12f + MathF.PI, light, accent);
 
-        // Ketten (zwei, weiter außen)
-        DrawPreviewFlailChain(cx - 32, (int)(cy - 22 + bob), -1, time, accent, light);
-        DrawPreviewFlailChain(cx + 32, (int)(cy - 22 + bob), 1, time, accent, light);
+        // Ketten (zwei, weiter außen, Seiten vertauscht) – bleiben auf ursprünglicher Höhe
+        DrawPreviewFlailChain(cx - 32, headY, 1, time, accent, light);
+        DrawPreviewFlailChain(cx + 32, headY, -1, time, accent, light);
 
-        // Stange
-        DrawRoundedRectCharSelect(cx - 7, (int)(cy - 20 + bob), 14, 70, 4, dark, accent, 2);
+        // Stange, nach unten verschoben bis sie mit dem Kopf-Kreis kollidiert
+        DrawRoundedRectCharSelect(cx - 7, headY, 14, 70, 4, dark, accent, 2);
 
         // Arme am Kopf
-        DrawPreviewFlailArm(cx - 22, (int)(cy - 22 + bob), body, accent, dark, light, time, true);
-        DrawPreviewFlailArm(cx + 22, (int)(cy - 22 + bob), body, accent, dark, light, time, false);
+        DrawPreviewFlailArm(cx - 22, headY, body, accent, dark, light, time, true);
+        DrawPreviewFlailArm(cx + 22, headY, body, accent, dark, light, time, false);
 
         // Katzenkopf
-        Raylib.DrawCircle(cx, (int)(cy - 22 + bob), headSize / 2, body);
-        Raylib.DrawCircleLines(cx, (int)(cy - 22 + bob), headSize / 2, accent);
+        Raylib.DrawCircle(cx, headY, headSize / 2, body);
+        Raylib.DrawCircleLines(cx, headY, headSize / 2, accent);
 
         // Schnauze
-        Raylib.DrawEllipse(cx + 16, (int)(cy - 15 + bob), 20, 14, light);
-        Raylib.DrawCircle(cx + 25, (int)(cy - 15 + bob), 5, dark);
+        Raylib.DrawEllipse(cx + 16, headY + 7, 20, 14, light);
+        Raylib.DrawCircle(cx + 25, headY + 7, 5, dark);
 
         // Grimmiges Gesicht
         // Augenbrauen
-        Raylib.DrawLineEx(new Vector2(cx - 16, cy - 28 + bob), new Vector2(cx - 4, cy - 22 + bob), 4f, accent);
-        Raylib.DrawLineEx(new Vector2(cx + 16, cy - 28 + bob), new Vector2(cx + 4, cy - 22 + bob), 4f, accent);
+        Raylib.DrawLineEx(new Vector2(cx - 16, headY - 6), new Vector2(cx - 4, headY), 4f, accent);
+        Raylib.DrawLineEx(new Vector2(cx + 16, headY - 6), new Vector2(cx + 4, headY), 4f, accent);
         // Zähne
         for (int i = -2; i <= 2; i++)
         {
             int tx = cx + 22 + i * 5;
-            Raylib.DrawTriangle(new Vector2(tx, cy - 12 + bob), new Vector2(tx - 2, cy - 6 + bob), new Vector2(tx + 2, cy - 6 + bob), Color.WHITE);
-            Raylib.DrawTriangle(new Vector2(tx, cy - 6 + bob), new Vector2(tx - 2, cy - 12 + bob), new Vector2(tx + 2, cy - 12 + bob), Color.WHITE);
+            Raylib.DrawTriangle(new Vector2(tx, headY + 10), new Vector2(tx - 2, headY + 16), new Vector2(tx + 2, headY + 16), Color.WHITE);
+            Raylib.DrawTriangle(new Vector2(tx, headY + 16), new Vector2(tx - 2, headY + 10), new Vector2(tx + 2, headY + 10), Color.WHITE);
         }
         // Narbe
-        Raylib.DrawLine(cx - 10, (int)(cy - 30 + bob), cx - 4, (int)(cy - 18 + bob), new Color(80, 60, 30, 255));
+        Raylib.DrawLine(cx - 10, headY - 8, cx - 4, headY + 4, new Color(80, 60, 30, 255));
 
         // Augen
-        Raylib.DrawEllipse(cx - 5, (int)(cy - 26 + bob), 6, 4, new Color(255, 60, 60, 255));
-        Raylib.DrawEllipse(cx + 5, (int)(cy - 26 + bob), 6, 4, new Color(255, 60, 60, 255));
+        Raylib.DrawEllipse(cx - 5, headY - 4, 6, 4, new Color(255, 60, 60, 255));
+        Raylib.DrawEllipse(cx + 5, headY - 4, 6, 4, new Color(255, 60, 60, 255));
 
         // Schnurrhaare
-        Raylib.DrawLine(cx + 23, (int)(cy - 17 + bob), cx + 39, (int)(cy - 15 + bob), Color.WHITE);
-        Raylib.DrawLine(cx + 23, (int)(cy - 13 + bob), cx + 35, (int)(cy - 13 + bob), Color.WHITE);
+        Raylib.DrawLine(cx + 23, headY + 5, cx + 39, headY + 7, Color.WHITE);
+        Raylib.DrawLine(cx + 23, headY + 9, cx + 35, headY + 9, Color.WHITE);
     }
 
     private void DrawPreviewSpikedWheel(int cx, int cy, int radius, float rotation, Color light, Color accent)
@@ -260,23 +262,31 @@ public class CharacterSelect
 
     private void DrawPreviewFlailChain(int cx, int cy, int side, float time, Color accent, Color light)
     {
-        // Stift
-        Raylib.DrawLine(cx - side * 8, cy + 10, cx, cy, accent);
-        Raylib.DrawCircle(cx, cy, 4, accent);
+        int postEndX = cx + side * 18;
+        int postEndY = cy - 8;
+
+        // Festes Gelenk am Kopf (inneres Ende der Stange)
+        Raylib.DrawCircle(cx, cy, 6, accent);
+
+        // Dünne Stange, die wie ein Ohr aus dem Kopf ragt
+        DrawRoundedRectCharSelect(cx - 2, cy - 8, 4, 40, 3, accent, Color.WHITE, 1);
+
+        // Außeres Gelenk, an dem die Kette hängt
+        Raylib.DrawCircle(postEndX, postEndY, 4, accent);
 
         float chainLength = 80f;
         float idleSway = MathF.Sin(time * 3f + side) * 5f;
-        float chainEndX = cx + idleSway * 0.5f;
-        float chainEndY = cy + chainLength;
+        float chainEndX = postEndX + idleSway * 0.5f;
+        float chainEndY = postEndY + chainLength;
 
         Vector2[] chain = new Vector2[8];
-        chain[0] = new Vector2(cx, cy);
+        chain[0] = new Vector2(postEndX, postEndY);
         for (int i = 1; i < chain.Length; i++)
         {
             float t = i / (float)(chain.Length - 1);
             chain[i] = new Vector2(
-                cx + (chainEndX - cx) * t + MathF.Sin(time * 8f + i + side) * 2f,
-                cy + (chainEndY - cy) * t);
+                postEndX + (chainEndX - postEndX) * t + MathF.Sin(time * 8f + i + side) * 2f,
+                postEndY + (chainEndY - postEndY) * t);
         }
 
         for (int i = 0; i < chain.Length - 1; i++)
@@ -313,15 +323,15 @@ public class CharacterSelect
         int bob = (int)(MathF.Sin((float)Raylib.GetTime() * 6f) * 4f);
 
         // Gewand
-        DrawRoundedRect(cx - 30, cy + 10 + bob, 60, 75, 10, dark, accent, 2);
+        DrawRoundedRectCharSelect(cx - 30, cy + 10 + bob, 60, 75, 10, dark, accent, 2);
         // Hüfte
-        DrawRoundedRect(cx - 34, cy - 5 + bob, 68, 22, 8, body, accent, 2);
+        DrawRoundedRectCharSelect(cx - 34, cy - 5 + bob, 68, 22, 8, body, accent, 2);
         // Düsen
         Raylib.DrawCircle(cx - 22, cy + 6 + bob, 5, Color.ORANGE);
         Raylib.DrawCircle(cx + 22, cy + 6 + bob, 5, Color.ORANGE);
         // Brustkorb
-        DrawRoundedRect(cx - 36, cy - 55 + bob, 72, 55, 10, body, accent, 2);
-        DrawRoundedRect(cx - 26, cy - 50 + bob, 52, 22, 6, light, Color.WHITE, 1);
+        DrawRoundedRectCharSelect(cx - 36, cy - 55 + bob, 72, 55, 10, body, accent, 2);
+        DrawRoundedRectCharSelect(cx - 26, cy - 50 + bob, 52, 22, 6, light, Color.WHITE, 1);
         // Reaktor
         Raylib.DrawCircle(cx, cy - 30 + bob, 10, accent);
         Raylib.DrawCircle(cx, cy - 30 + bob, 6, Color.ORANGE);
@@ -339,7 +349,7 @@ public class CharacterSelect
     private void DrawPyrosPreviewHead(int cx, int cy, Color body, Color accent, Color dark, Color light)
     {
         // Nacken
-        DrawRoundedRect(cx - 8, cy + 8, 16, 12, 4, dark, accent, 1);
+        DrawRoundedRectCharSelect(cx - 8, cy + 8, 16, 12, 4, dark, accent, 1);
         // Kopf
         Raylib.DrawEllipse(cx, cy, 18, 22, body);
         Raylib.DrawEllipseLines(cx, cy, 18, 22, accent);
@@ -400,8 +410,8 @@ public class CharacterSelect
 
             case RobotType.Shadow:
                 // Ninja-Kapuze
-                DrawRoundedRect(cx - headSize / 2, cy - headSize / 2, headSize, headSize, 6, accent, dark, 2);
-                DrawRoundedRect(cx - headSize / 2 + 4, cy - headSize / 2 + 4, headSize - 8, headSize - 8, 4, body, accent, 1);
+                DrawRoundedRectCharSelect(cx - headSize / 2, cy - headSize / 2, headSize, headSize, 6, accent, dark, 2);
+                DrawRoundedRectCharSelect(cx - headSize / 2 + 4, cy - headSize / 2 + 4, headSize - 8, headSize - 8, 4, body, accent, 1);
                 Raylib.DrawRectangle(cx - headSize / 2, cy - 4, headSize, 6, accent);
                 break;
 
@@ -416,9 +426,9 @@ public class CharacterSelect
 
             case RobotType.Flail:
                 // Boxiger Helm
-                DrawRoundedRect(cx - headSize / 2, cy - headSize / 2, headSize, headSize, 4, accent, new Color(220, 180, 60, 255), 2);
-                DrawRoundedRect(cx - headSize / 2 + 5, cy - headSize / 2 + 5, headSize - 10, headSize - 10, 3, body, accent, 1);
-                DrawRoundedRect(cx - headSize / 2 + 3, cy - headSize / 2 + 3, headSize - 6, 12, 2, dark, new Color(220, 180, 60, 255), 1);
+                DrawRoundedRectCharSelect(cx - headSize / 2, cy - headSize / 2, headSize, headSize, 4, accent, new Color(220, 180, 60, 255), 2);
+                DrawRoundedRectCharSelect(cx - headSize / 2 + 5, cy - headSize / 2 + 5, headSize - 10, headSize - 10, 3, body, accent, 1);
+                DrawRoundedRectCharSelect(cx - headSize / 2 + 3, cy - headSize / 2 + 3, headSize - 6, 12, 2, dark, new Color(220, 180, 60, 255), 1);
                 break;
         }
 
@@ -438,16 +448,16 @@ public class CharacterSelect
                 Raylib.DrawTriangle(new Vector2(cx, cy - 10), new Vector2(cx - 5, cy + 2), new Vector2(cx + 5, cy + 2), body);
                 break;
             case RobotType.Shadow:
-                DrawRoundedRect(cx - 6, cy - 14, 12, 26, 3, new Color(120, 40, 160, 255), accent, 1);
+                DrawRoundedRectCharSelect(cx - 6, cy - 14, 12, 26, 3, new Color(120, 40, 160, 255), accent, 1);
                 for (int i = -2; i <= 2; i++)
                     Raylib.DrawLine(cx - 4, cy + i * 4, cx + 4, cy + i * 4, Color.WHITE);
                 break;
             case RobotType.Thorn:
-                DrawRoundedRect(cx - 8, cy - 14, 16, 26, 4, new Color(100, 80, 40, 255), accent, 1);
+                DrawRoundedRectCharSelect(cx - 8, cy - 14, 16, 26, 4, new Color(100, 80, 40, 255), accent, 1);
                 Raylib.DrawCircle(cx, cy, 5, new Color(160, 200, 40, 255));
                 break;
             case RobotType.Flail:
-                DrawRoundedRect(cx - 10, cy - 10, 20, 18, 3, new Color(80, 60, 30, 255), new Color(220, 180, 60, 255), 1);
+                DrawRoundedRectCharSelect(cx - 10, cy - 10, 20, 18, 3, new Color(80, 60, 30, 255), new Color(220, 180, 60, 255), 1);
                 for (int i = -1; i <= 1; i += 2)
                     for (int j = -1; j <= 1; j += 2)
                         Raylib.DrawCircle(cx + i * 5, cy + j * 4, 2, new Color(220, 180, 60, 255));
@@ -460,13 +470,13 @@ public class CharacterSelect
         // Schulter
         Raylib.DrawCircle(cx, cy, 9, accent);
         // Oberarm
-        DrawRoundedRect(cx - w / 2, cy, w, h / 2, 5, body, accent, 1);
+        DrawRoundedRectCharSelect(cx - w / 2, cy, w, h / 2, 5, body, accent, 1);
         // Ellenbogen
         Raylib.DrawCircle(cx, (int)(cy + h / 2), 7, accent);
         // Unterarm
-        DrawRoundedRect((int)(cx - w * 0.4f), (int)(cy + h / 2 - 2), (int)(w * 0.8f), (int)(h / 2 + 4), 4, body, accent, 1);
+        DrawRoundedRectCharSelect((int)(cx - w * 0.4f), (int)(cy + h / 2 - 2), (int)(w * 0.8f), (int)(h / 2 + 4), 4, body, accent, 1);
         // Hand
-        DrawRoundedRect(cx - 7, (int)(cy + h - 6), 14, 14, 4, dark, accent, 1);
+        DrawRoundedRectCharSelect(cx - 7, (int)(cy + h - 6), 14, 14, 4, dark, accent, 1);
         // Finger
         for (int i = -1; i <= 1; i++)
         {
@@ -480,13 +490,13 @@ public class CharacterSelect
         // Hüftgelenk
         Raylib.DrawCircle(cx, cy, 8, accent);
         // Oberschenkel
-        DrawRoundedRect(cx - w / 2, cy, w, h / 2, 5, body, accent, 1);
+        DrawRoundedRectCharSelect(cx - w / 2, cy, w, h / 2, 5, body, accent, 1);
         // Knie
         Raylib.DrawCircle(cx, (int)(cy + h / 2), 7, accent);
         // Unterschenkel
-        DrawRoundedRect((int)(cx - w * 0.4f), (int)(cy + h / 2 - 2), (int)(w * 0.8f), (int)(h / 2 + 4), 4, body, accent, 1);
+        DrawRoundedRectCharSelect((int)(cx - w * 0.4f), (int)(cy + h / 2 - 2), (int)(w * 0.8f), (int)(h / 2 + 4), 4, body, accent, 1);
         // Fuß
-        DrawRoundedRect((int)(cx - w / 2 - 2), (int)(cy + h - 4), (int)(w + 6), 12, 4, dark, accent, 1);
+        DrawRoundedRectCharSelect((int)(cx - w / 2 - 2), (int)(cy + h - 4), (int)(w + 6), 12, 4, dark, accent, 1);
         // Sohle
         Raylib.DrawRectangle((int)(cx - w / 2), (int)(cy + h + 4), (int)w + 2, 4, accent);
     }
@@ -503,9 +513,10 @@ public class CharacterSelect
         };
 
         // Griff
-        DrawRoundedRect(cx - 4, cy - 4, 8, 16, 2, new Color(60, 60, 60, 255), accent, 1);
+        DrawRoundedRectCharSelect(cx - 4, cy - 4, 8, 16, 2, new Color(60, 60, 60, 255), accent, 1);
+
         // Waffenkörper
-        DrawRoundedRect(cx, (int)(cy - 6), 45, 12, 3, weaponColor, Color.WHITE, 1);
+        DrawRoundedRectCharSelect(cx, (int)(cy - 6), 45, 12, 3, weaponColor, Color.WHITE, 1);
         Raylib.DrawRectangle((int)(cx + 12), (int)(cy - 4), 18, 8, light);
 
         switch (type)
@@ -541,25 +552,15 @@ public class CharacterSelect
         switch (type)
         {
             case RobotType.Jaguar:
-                // Schwanz
-                float sway = MathF.Sin((float)Raylib.GetTime() * 4f) * 5f;
+                float sway = MathF.Sin((float)Raylib.GetTime() * 8f) * 8f;
                 Raylib.DrawLineEx(new Vector2(cx - 28, cy + 30 + bob), new Vector2(cx - 45 + sway, cy + 50 + bob), 5, accent);
                 Raylib.DrawLineEx(new Vector2(cx - 45 + sway, cy + 50 + bob), new Vector2(cx - 52 + sway * 1.3f, cy + 68 + bob), 4, accent);
                 Raylib.DrawTriangle(new Vector2(cx - 52 + sway * 1.3f, cy + 68 + bob), new Vector2(cx - 58 + sway * 1.3f, cy + 62 + bob), new Vector2(cx - 48 + sway * 1.3f, cy + 62 + bob), light);
                 break;
             case RobotType.Shadow:
-                // Schal
-                float scarfSway = MathF.Sin((float)Raylib.GetTime() * 5f) * 6f;
-                Raylib.DrawLineEx(new Vector2(cx - 30, cy + bob), new Vector2(cx - 55 + scarfSway, cy + 12 + bob), 5, new Color(180, 40, 220, 180));
+                float scarfSway = MathF.Sin((float)Raylib.GetTime() * 10f) * 10f;
+                Raylib.DrawLineEx(new Vector2(cx - 30, cy - 8 + bob), new Vector2(cx - 55 + scarfSway, cy + 12 + bob), 5, new Color(180, 40, 220, 180));
                 Raylib.DrawLineEx(new Vector2(cx - 55 + scarfSway, cy + 12 + bob), new Vector2(cx - 70 + scarfSway * 1.2f, cy + 28 + bob), 4, new Color(180, 40, 220, 140));
-                break;
-            case RobotType.Thorn:
-                // Rückendornen
-                for (int i = 0; i < 3; i++)
-                {
-                    float dy = cy - 10 + i * 16 + bob;
-                    Raylib.DrawTriangle(new Vector2(cx - 32, dy), new Vector2(cx - 26, dy - 4), new Vector2(cx - 26, dy + 4), accent);
-                }
                 break;
         }
     }
@@ -569,38 +570,31 @@ public class CharacterSelect
         switch (type)
         {
             case RobotType.Thorn:
-                // Schulterdornen
-                Raylib.DrawTriangle(new Vector2(cx - 38, cy - 22 + bob), new Vector2(cx - 48, cy - 14 + bob), new Vector2(cx - 34, cy - 10 + bob), accent);
-                Raylib.DrawTriangle(new Vector2(cx + 38, cy - 22 + bob), new Vector2(cx + 48, cy - 14 + bob), new Vector2(cx + 34, cy - 10 + bob), accent);
-                break;
-            case RobotType.Flail:
-                // Schulterpolster
-                DrawRoundedRect(cx - 46, (int)(cy - 28 + bob), 16, 28, 4, accent, new Color(220, 180, 60, 255), 1);
-                DrawRoundedRect(cx + 30, (int)(cy - 28 + bob), 16, 28, 4, accent, new Color(220, 180, 60, 255), 1);
-                // Gürtel
-                DrawRoundedRect(cx - 32, (int)(cy + 28 + bob), 64, 12, 4, dark, new Color(220, 180, 60, 255), 1);
-                Raylib.DrawCircle(cx, (int)(cy + 34 + bob), 7, new Color(220, 180, 60, 255));
-                break;
-            case RobotType.Jaguar:
-                // Seitliche Lüftungsschlitze
                 for (int i = -1; i <= 1; i += 2)
                 {
-                    float sx = cx + i * 28;
-                    Raylib.DrawRectangle((int)(sx - 5), (int)(cy - 6 + bob), 10, 18, dark);
-                    for (int j = 0; j < 3; j++)
-                        Raylib.DrawLine((int)(sx - 4), (int)(cy - 2 + bob + j * 5), (int)(sx + 4), (int)(cy - 2 + bob + j * 5), accent);
+                    float sx = cx + i * 28f;
+                    float sy = cy - 22f + bob;
+                    Raylib.DrawTriangle(new Vector2(sx + i * 14f, sy - 8f), new Vector2(sx + i * 6f, sy + 4f), new Vector2(sx - i * 4f, sy - 2f), accent);
+                    Raylib.DrawTriangle(new Vector2(sx + i * 12f, sy + 12f), new Vector2(sx + i * 4f, sy + 2f), new Vector2(sx - i * 6f, sy + 8f), accent);
                 }
                 break;
-            case RobotType.Shadow:
-                // Gürteltaschen
-                DrawRoundedRect(cx - 28, cy + 24 + bob, 56, 10, 3, dark, accent, 1);
-                Raylib.DrawRectangle(cx - 22, (int)(cy + 30 + bob), 12, 10, accent);
-                Raylib.DrawRectangle(cx + 10, (int)(cy + 30 + bob), 12, 10, accent);
+            case RobotType.Flail:
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    float sx = cx + i * 30f;
+                    float sy = cy - 26f + bob;
+                    DrawRoundedRectCharSelect(sx - 12f, sy - 10f, 24f, 36f, 6f, accent, new Color(220, 180, 60, 255), 2f);
+                    Raylib.DrawCircle((int)(sx - 6f), (int)(sy + 4f), 3f, new Color(220, 180, 60, 255));
+                    Raylib.DrawCircle((int)(sx + 6f), (int)(sy + 4f), 3f, new Color(220, 180, 60, 255));
+                }
+                DrawRoundedRectCharSelect(cx - 27f, cy + 6f + bob, 54f, 16f, 5f, dark, new Color(220, 180, 60, 255), 2f);
+                Raylib.DrawCircle((int)cx, (int)(cy + 14f + bob), 10f, new Color(220, 180, 60, 255));
+                Raylib.DrawCircle((int)cx, (int)(cy + 14f + bob), 6f, dark);
                 break;
         }
     }
 
-    private void DrawRoundedRect(float x, float y, float w, float h, float radius, Color fill, Color border, float borderThickness)
+    private void DrawRoundedRectCharSelect(float x, float y, float w, float h, float radius, Color fill, Color border, float borderThickness)
     {
         Raylib.DrawRectangle((int)x, (int)(y + radius), (int)w, (int)(h - 2 * radius), fill);
         Raylib.DrawRectangle((int)(x + radius), (int)y, (int)(w - 2 * radius), (int)h, fill);
@@ -620,10 +614,5 @@ public class CharacterSelect
             Raylib.DrawCircleLines((int)(x + r), (int)(y + h - r), r, border);
             Raylib.DrawCircleLines((int)(x + w - r), (int)(y + h - r), r, border);
         }
-    }
-
-    private void DrawRoundedRectCharSelect(float x, float y, float w, float h, float radius, Color fill, Color border, float borderThickness)
-    {
-        DrawRoundedRect(x, y, w, h, radius, fill, border, borderThickness);
     }
 }
