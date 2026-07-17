@@ -75,13 +75,13 @@ public class PyrosRobot : Robot
         }
     }
 
-    protected override void DrawShadow(Vector2 center)
+    protected override void DrawShadow(Vector2 center, float crouchOffset)
     {
         float shadowW = Width * 1.4f;
         float shadowH = 22f;
         float alpha = 1f - Math.Clamp((FloorY - Position.Y) / 200f, 0f, 0.6f);
         Color shadowColor = new Color(0, 0, 0, (int)(120 * alpha));
-        Raylib.DrawEllipse((int)Position.X, (int)(Position.Y - 4f), shadowW / 2f, shadowH / 2f, shadowColor);
+        Raylib.DrawEllipse((int)Position.X, (int)(Position.Y - 4f + crouchOffset), shadowW / 2f, shadowH / 2f, shadowColor);
     }
 
     protected override void DrawRobot(Vector2 center, float bob, float time)

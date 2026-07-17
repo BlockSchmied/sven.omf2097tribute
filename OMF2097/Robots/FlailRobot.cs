@@ -229,16 +229,17 @@ public class FlailRobot : Robot
     private void DrawChains(Vector2 center, float bob, float time)
     {
         float headY = center.Y - Height * 0.16f + bob;
-        float dir = FacingRight ? 1f : -1f;
 
-        // Genau zwei Ketten, als Ohren aus dem Kopf ragend, Seiten vertauscht
-        DrawChain(new Vector2(center.X - 26f, headY - 18f), 1, dir, time);
-        DrawChain(new Vector2(center.X + 26f, headY - 18f), -1, dir, time);
+        // Kettenstangen behalten stets dieselbe Ausrichtung wie bei P2 (nach links)
+        // und drehen sich nicht mit der Blickrichtung des Roboters
+        DrawChain(new Vector2(center.X - 26f, headY - 18f), -1, time);
+        DrawChain(new Vector2(center.X + 26f, headY - 18f), 1, time);
     }
 
-    private void DrawChain(Vector2 anchor, int side, float dir, float time)
+    private void DrawChain(Vector2 anchor, int side, float time)
     {
-        float postDir = side * dir;
+        // Feste Ausrichtung: linke Stange zeigt nach links, rechte nach rechts
+        float postDir = side;
 
         // Stange ragt aus dem Kopf heraus; das innere Ende ist fest am Kopf
         float postEndX = anchor.X + postDir * 18f;

@@ -34,12 +34,16 @@ public class JaguarRobot : Robot
 
     protected override void DrawRobot(Vector2 center, float bob, float time)
     {
-        DrawTail(center, bob, time);
-        DrawBody(center, bob);
-        DrawHead(center, bob);
-        DrawLimbs(center, bob, time);
-        DrawWeapon(center, bob);
-        DrawDetailsFront(center, bob);
+        float crouchScale = State == RobotState.Block ? 0.65f : 1f;
+        float crouchOffset = State == RobotState.Block ? Height * 0.35f : 0f;
+        Vector2 crouchCenter = new Vector2(center.X, center.Y + crouchOffset);
+
+        DrawTail(crouchCenter, bob, time);
+        DrawBody(crouchCenter, bob, crouchScale);
+        DrawHead(crouchCenter, bob);
+        DrawLimbs(crouchCenter, bob, time, crouchScale);
+        DrawWeapon(crouchCenter, bob);
+        DrawDetailsFront(crouchCenter, bob);
     }
 
     private void DrawTail(Vector2 center, float bob, float time)
@@ -66,17 +70,18 @@ public class JaguarRobot : Robot
             Light);
     }
 
-    private void DrawBody(Vector2 center, float bob)
+    private void DrawBody(Vector2 center, float bob, float crouchScale = 1f)
     {
         float torsoW = Width * 0.85f;
+        float torsoH = Height * crouchScale;
         float torsoY = center.Y + bob;
 
-        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY + Height * 0.18f, torsoW * 0.7f, Height * 0.16f, 8f, Dark, Accent, 2f);
-        DrawRoundedRect(center.X - torsoW * 0.4f, torsoY + Height * 0.02f, torsoW * 0.8f, Height * 0.22f, 10f, Color, Accent, 2f);
-        DrawRoundedRect(center.X - torsoW * 0.45f, torsoY - Height * 0.32f, torsoW * 0.9f, Height * 0.38f, 14f, Color, Accent, 3f);
-        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY - Height * 0.28f, torsoW * 0.7f, Height * 0.18f, 10f, Light, Color.WHITE, 1f);
+        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY + torsoH * 0.18f, torsoW * 0.7f, torsoH * 0.16f, 8f, Dark, Accent, 2f);
+        DrawRoundedRect(center.X - torsoW * 0.4f, torsoY + torsoH * 0.02f, torsoW * 0.8f, torsoH * 0.22f, 10f, Color, Accent, 2f);
+        DrawRoundedRect(center.X - torsoW * 0.45f, torsoY - torsoH * 0.32f, torsoW * 0.9f, torsoH * 0.38f, 14f, Color, Accent, 3f);
+        DrawRoundedRect(center.X - torsoW * 0.35f, torsoY - torsoH * 0.28f, torsoW * 0.7f, torsoH * 0.18f, 10f, Light, Color.WHITE, 1f);
 
-        float coreY = torsoY - Height * 0.12f;
+        float coreY = torsoY - torsoH * 0.12f;
         Raylib.DrawCircle((int)center.X, (int)coreY, 16f, Accent);
         Raylib.DrawCircle((int)center.X, (int)coreY, 12f, Dark);
         Raylib.DrawCircle((int)center.X, (int)coreY, 8f, Color.WHITE);
@@ -152,22 +157,23 @@ public class JaguarRobot : Robot
         Raylib.DrawRectangle((int)(visorX + 4f), (int)(headPos.Y - 3f), (int)(visorW * 0.3f), 2, Color.WHITE);
     }
 
-    private void DrawLimbs(Vector2 center, float bob, float time)
+    private void DrawLimbs(Vector2 center, float bob, float time, float crouchScale = 1f)
     {
+        float torsoH = Height * crouchScale;
         float armW = 14f;
-        float armH = 46f;
+        float armH = 46f * crouchScale;
         float legW = 18f;
-        float legH = 52f;
+        float legH = 52f * crouchScale;
 
         float armExtension = CurrentAttackType == AttackType.Punch ? 45f : (CurrentAttackType == AttackType.Kick ? 22f : 28f);
         float armOffset = State == RobotState.Attack ? (FacingRight ? armExtension : -armExtension) : (FacingRight ? 20f : -20f);
         float armAngle = State == RobotState.Attack ? (FacingRight ? -0.9f : 0.9f) : 0f;
 
-        Vector2 shoulderY = new Vector2(center.X, center.Y - Height * 0.26f + bob);
+        Vector2 shoulderY = new Vector2(center.X, center.Y - torsoH * 0.26f + bob);
         DrawArm(new Vector2(shoulderY.X - armOffset, shoulderY.Y), armW, armH, armAngle, true, time);
         DrawArm(new Vector2(shoulderY.X + armOffset, shoulderY.Y), armW, armH, -armAngle, false, time);
 
-        Vector2 hipY = new Vector2(center.X, center.Y + Height * 0.18f + bob);
+        Vector2 hipY = new Vector2(center.X, center.Y + torsoH * 0.18f + bob);
         float legBob = State == RobotState.Walk ? MathF.Sin(time * 15f + MathF.PI) * 8f : 0f;
         float kickExtension = CurrentAttackType == AttackType.Kick && State == RobotState.Attack ? 28f : 0f;
         float kickDir = FacingRight ? 1f : -1f;

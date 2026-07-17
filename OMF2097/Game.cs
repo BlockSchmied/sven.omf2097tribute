@@ -40,6 +40,8 @@ public class Game
 
         _player1 = RobotFactory.Create(RobotType.Jaguar, true, new Vector2(300, _arena.FloorY));
         _player2 = RobotFactory.Create(RobotType.Shadow, false, new Vector2(screenWidth - 300, _arena.FloorY));
+        _p1LastGroundX = _player1.Position;
+        _p2LastGroundX = _player2.Position;
         _characterSelect = new CharacterSelect(screenWidth, screenHeight);
 
         _camera = new Camera2D
@@ -122,8 +124,8 @@ public class Game
 
         ResolveCollision(_player1, _player2);
 
-        AutoTurnAfterJumpOver(_player1, _player2);
-        AutoTurnAfterJumpOver(_player2, _player1);
+        AutoTurnAfterJumpOver(_player1, _player2, ref _p1LastGroundX);
+        AutoTurnAfterJumpOver(_player2, _player1, ref _p2LastGroundX);
 
         if (_player1.IsAttacking && _player1.HitboxActive && _player1.AttackHitbox.Intersects(_player2.Hurtbox))
         {
@@ -170,17 +172,28 @@ public class Game
         b.FacingRight = b.Position.X < a.Position.X;
     }
 
-    private void AutoTurnAfterJumpOver(Robot jumper, Robot other)
+    private Vector2 _p1LastGroundX;
+    private Vector2 _p2LastGroundX;
+
+    private void AutoTurnAfterJumpOver(Robot jumper, Robot other, ref Vector2 lastGroundX)
     {
-        if (jumper.State != RobotState.Jump)
-            return;
-
-        bool wasLeftOfOther = jumper.Position.X < other.Position.X;
-        bool nowRightOfOther = jumper.Position.X > other.Position.X;
-
-        if ((wasLeftOfOther && nowRightOfOther) || (!wasLeftOfOther && !nowRightOfOther))
+        if (jumper.State == RobotState.Jump)
         {
-            jumper.FacingRight = jumper.Position.X < other.Position.X;
+            bool wasLeftOfOther = lastGroundX.X < other.Position.X;
+            bool nowRightOfOther = jumper.Position.X > other.Position.X;
+
+            if (wasLeftOfOther && nowRightOfOther)
+            {
+                jumper.FacingRight = false;
+            }
+            else if (!wasLeftOfOther && !nowRightOfOther)
+            {
+                jumper.FacingRight = true;
+            }
+        }
+        else if (jumper.Position.Y >= _arena.FloorY - 1f)
+        {
+            lastGroundX = jumper.Position;
         }
     }
 
@@ -208,12 +221,16 @@ public class Game
         _round = 1;
         _player1 = RobotFactory.Create(p1Type, true, new Vector2(300, _arena.FloorY));
         _player2 = RobotFactory.Create(p2Type, false, new Vector2(_screenWidth - 300, _arena.FloorY));
+        _p1LastGroundX = _player1.Position;
+        _p2LastGroundX = _player2.Position;
     }
 
     private void ResetRound()
     {
         _player1.Reset(new Vector2(300, _arena.FloorY));
         _player2.Reset(new Vector2(_screenWidth - 300, _arena.FloorY));
+        _p1LastGroundX = _player1.Position;
+        _p2LastGroundX = _player2.Position;
     }
 
     public void Draw()

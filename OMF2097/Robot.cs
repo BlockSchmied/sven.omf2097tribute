@@ -48,7 +48,7 @@ public abstract class Robot
     public float Health { get; private set; } = 100f;
     public RobotType Type { get; }
     public bool IsPlayer1 { get; }
-    public RobotState State { get; private set; } = RobotState.Idle;
+    public RobotState State { get; protected set; } = RobotState.Idle;
 
     public bool IsAttacking => State == RobotState.Attack;
     public bool HitboxActive { get; set; } = false;
@@ -61,8 +61,8 @@ public abstract class Robot
 
     protected const float Gravity = 1800f;
     protected const float WalkSpeed = 220f;
-    protected const float JumpSpeed = -650f;
-    protected const float CrouchJumpSpeed = -1150f;
+    protected const float JumpSpeed = -820f;
+    protected const float CrouchJumpSpeed = -1450f;
     protected const float FloorY = 560f;
 
     protected float StateTimer = 0f;
@@ -289,15 +289,13 @@ public abstract class Robot
 
     public void Draw()
     {
-        Vector2 center = new Vector2(Position.X, Position.Y - Height / 2f);
+        float crouchOffset = State == RobotState.Block ? Height * 0.35f : 0f;
+        Vector2 center = new Vector2(Position.X, Position.Y - Height / 2f + crouchOffset);
         float bob = State == RobotState.Walk ? MathF.Sin((float)Raylib.GetTime() * 15f) * 6f : 0f;
         float time = (float)Raylib.GetTime();
 
-        DrawShadow(center);
+        DrawShadow(center, crouchOffset);
         DrawRobot(center, bob, time);
-
-        if (State == RobotState.Block)
-            DrawShield();
 
         if (Raylib.IsKeyDown(KeyboardKey.KEY_F1))
         {
@@ -309,27 +307,13 @@ public abstract class Robot
 
     protected abstract void DrawRobot(Vector2 center, float bob, float time);
 
-    protected virtual void DrawShadow(Vector2 center)
+    protected virtual void DrawShadow(Vector2 center, float crouchOffset)
     {
         float shadowW = Width * 1.2f;
         float shadowH = 16f;
         float alpha = 1f - Math.Clamp((FloorY - Position.Y) / 200f, 0f, 0.6f);
         Color shadowColor = new Color(0, 0, 0, (int)(120 * alpha));
-        Raylib.DrawEllipse((int)Position.X, (int)(Position.Y - 4f), shadowW / 2f, shadowH / 2f, shadowColor);
-    }
-
-    protected void DrawShield()
-    {
-        float dir = FacingRight ? -1f : 1f;
-        float x = Position.X + dir * (Width / 2f + 14f);
-        float y = Position.Y - Height * 0.7f;
-        float w = 16f;
-        float h = Height * 0.65f;
-
-        DrawRoundedRect(x, y, w, h, 6f, new Color(100, 200, 255, 160), new Color(150, 230, 255, 200), 2f);
-        Raylib.DrawRectangle((int)(x + 3f), (int)(y + 8f), (int)(w - 6f), 4, new Color(200, 240, 255, 180));
-        Raylib.DrawRectangle((int)(x + 3f), (int)(y + h - 12f), (int)(w - 6f), 4, new Color(200, 240, 255, 180));
-        Raylib.DrawRectangle((int)(x - 4f), (int)y, (int)(w + 8f), (int)h, new Color(100, 200, 255, 40));
+        Raylib.DrawEllipse((int)Position.X, (int)(Position.Y - 4f + crouchOffset), shadowW / 2f, shadowH / 2f, shadowColor);
     }
 
     // ========================
