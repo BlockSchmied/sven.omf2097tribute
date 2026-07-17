@@ -155,6 +155,26 @@ public class Game
 
     private void ResolveCollision(Robot a, Robot b)
     {
+        bool aAirborne = a.Position.Y < _arena.FloorY - 1f;
+        bool bAirborne = b.Position.Y < _arena.FloorY - 1f;
+
+        // Wenn ein Roboter springt und horizontal über dem anderen ist,
+        // wird keine horizontale Kollision aufgelöst, damit er übergehen kann.
+        if (aAirborne || bAirborne)
+        {
+            float horizontalDistance = Math.Abs(a.Position.X - b.Position.X);
+            float minHorizontalDistance = a.Width / 2f + b.Width / 2f;
+
+            if (horizontalDistance < minHorizontalDistance)
+            {
+                bool aAboveB = a.Position.Y < b.Position.Y;
+                bool bAboveA = b.Position.Y < a.Position.Y;
+
+                if ((aAirborne && aAboveB) || (bAirborne && bAboveA))
+                    return;
+            }
+        }
+
         float distance = a.Position.X - b.Position.X;
         float minDistance = a.Width / 2f + b.Width / 2f;
 
