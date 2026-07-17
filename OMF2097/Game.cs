@@ -38,8 +38,8 @@ public class Game
 
         _arena = new Arena(screenWidth, screenHeight);
 
-        _player1 = new Robot(RobotType.Jaguar, true, new Vector2(300, _arena.FloorY));
-        _player2 = new Robot(RobotType.Shadow, false, new Vector2(screenWidth - 300, _arena.FloorY));
+        _player1 = RobotFactory.Create(RobotType.Jaguar, true, new Vector2(300, _arena.FloorY));
+        _player2 = RobotFactory.Create(RobotType.Shadow, false, new Vector2(screenWidth - 300, _arena.FloorY));
         _characterSelect = new CharacterSelect(screenWidth, screenHeight);
 
         _camera = new Camera2D
@@ -206,8 +206,8 @@ public class Game
         _p1Wins = 0;
         _p2Wins = 0;
         _round = 1;
-        _player1 = new Robot(p1Type, true, new Vector2(300, _arena.FloorY));
-        _player2 = new Robot(p2Type, false, new Vector2(_screenWidth - 300, _arena.FloorY));
+        _player1 = RobotFactory.Create(p1Type, true, new Vector2(300, _arena.FloorY));
+        _player2 = RobotFactory.Create(p2Type, false, new Vector2(_screenWidth - 300, _arena.FloorY));
     }
 
     private void ResetRound()
